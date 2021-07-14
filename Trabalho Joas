@@ -1,0 +1,51 @@
+from numba import cuda
+import numpy
+from numpy import random
+
+@cuda.jit
+def my_kernel(io_array, o_array):
+   
+    tx = cuda.threadIdx.x
+    ty = cuda.blockIdx.x
+    bw = cuda.blockDim.x
+    
+   
+    pos = tx + ty * bw
+
+    num = 0
+    count = 0  
+    #i = 0
+    #while( i < io_array.size):
+    if pos < io_array.size:
+      num = io_array[pos]
+      for n in io_array:
+        if num == n:
+          count += 1
+      o_array[num] = count
+      count = 0
+      #i += 1
+
+    #if pos < io_array.size:  # Check array boundaries [0, 1] pos = 1
+    #  io_array[pos] *= 2   # do the computation
+
+data = random.randint(10, size=(1024))
+
+o_array = numpy.zeros([10])
+
+threads_per_block = 32
+
+blocks_per_grid = ( data.size + (threads_per_block - 1) )
+
+
+
+my_kernel[blocks_per_grid, threads_per_block](data, o_array )
+
+
+print(data)
+i = 0
+soma = 0
+while( i < o_array.size):
+  soma = soma + o_array[i]
+  print( i, ":" , o_array[i] )
+  i= i + 1
+print( "T :", soma )
